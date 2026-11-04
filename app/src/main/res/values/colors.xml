@@ -1,0 +1,10 @@
+<resources>
+    <color name="apple_system_bg">#F2F2F7</color>
+    <color name="apple_system_bg_dark">#000000</color>
+    <color name="apple_blue">#007AFF</color>
+    <color name="apple_mint">#34C759</color>
+    <color name="apple_purple">#AF52DE</color>
+    <color name="apple_orange">#FF9500</color>
+    <color name="apple_red">#FF3B30</color>
+</resources>
+

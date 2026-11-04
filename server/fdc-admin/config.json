@@ -1,0 +1,18 @@
+{
+  "admin_server_url": "http://192.168.31.105:8888/fdc-admin",
+  "config_version": 1,
+  "permanent_lockdown": true,
+  "anti_tamper_shield": true,
+  "kiosk_mode": false,
+  "disallow_factory_reset": true,
+  "disallow_safe_boot": true,
+  "disallow_apps_control": true,
+  "disallow_config_date_time": true,
+  "suspended_packages": [
+    "com.instagram.android",
+    "com.zhiliaoapp.musically",
+    "com.snapchat.android"
+  ],
+  "hidden_packages": []
+}
+

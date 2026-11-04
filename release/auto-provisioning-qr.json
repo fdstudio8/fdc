@@ -1,0 +1,13 @@
+{
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.fahad.devicecontroller/.dpc.FdcDeviceAdminReceiver",
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://github.com/fahadahmad/fdc/releases/download/v2.0.0/fdc-production.apk",
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "TZF7ylBFKSXkRbVunJka58i1UorxbueqjuBWyU7O0zw",
+  "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+  "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+  "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
+    "auto_setup": true,
+    "github_config_url": "https://raw.githubusercontent.com/fahadahmad/fdc-fleet-config/main/config.json",
+    "permanent_lockdown": true,
+    "anti_tamper_shield": true
+  }
+}

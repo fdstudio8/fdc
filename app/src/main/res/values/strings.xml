@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">FDC</string>
+    <string name="app_full_name">Fahad Device Controller</string>
+    <string name="device_admin_description">Universal Android Enterprise Device Policy Controller for managing study focus, application restrictions, and enterprise device security.</string>
+    <string name="admin_tile_label">FDC Admin</string>
+</resources>
+
