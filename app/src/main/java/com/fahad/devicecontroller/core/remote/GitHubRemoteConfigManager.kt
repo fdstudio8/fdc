@@ -96,26 +96,28 @@ class GitHubRemoteConfigManager(
     /**
      * Synchronizes configuration by fetching the GitHub JSON and applying policies.
      */
+    /**
+     * Synchronizes configuration by fetching from the Local MAMP PRO Server (100% Offline / Local Network).
+     */
     suspend fun syncFromGitHub(): Boolean = withContext(Dispatchers.IO) {
-        _state.value = _state.value.copy(isSyncing = true, lastSyncStatus = "Fetching remote config...")
-        val targetUrl = _state.value.githubJsonUrl
+        _state.value = _state.value.copy(isSyncing = true, lastSyncStatus = "Connecting to Local Mac Server...")
+        val serverBase = _state.value.adminServerUrl
 
-        var content = fetchJsonFromUrl(targetUrl)
-        var sourceName = "GitHub"
+        val primaryLocalUrl = if (serverBase.endsWith("/")) "${serverBase}api/config.php" else "$serverBase/api/config.php"
+        val fallbackLocalUrl = if (serverBase.endsWith("/")) "${serverBase}config.json" else "$serverBase/config.json"
 
-        // If primary GitHub URL returns 404 or fails, fallback to MAMP PRO server
+        var content = fetchJsonFromUrl(primaryLocalUrl)
+        var sourceName = "Local MAMP PRO Server"
+
         if (content == null) {
-            val fallbackUrl = if (_state.value.adminServerUrl.endsWith("/")) {
-                "${_state.value.adminServerUrl}config.json"
-            } else {
-                "${_state.value.adminServerUrl}/config.json"
-            }
-            if (fallbackUrl != targetUrl) {
-                Log.i(TAG, "Primary GitHub URL failed, attempting fallback to local MAMP PRO: $fallbackUrl")
-                content = fetchJsonFromUrl(fallbackUrl)
-                if (content != null) {
-                    sourceName = "MAMP PRO Admin"
-                }
+            content = fetchJsonFromUrl(fallbackLocalUrl)
+        }
+
+        // Optional custom URL if configured by user
+        if (content == null && _state.value.githubJsonUrl.isNotEmpty() && _state.value.githubJsonUrl != DEFAULT_GITHUB_JSON_URL) {
+            content = fetchJsonFromUrl(_state.value.githubJsonUrl)
+            if (content != null) {
+                sourceName = "Custom Server Endpoint"
             }
         }
 
@@ -130,10 +132,10 @@ class GitHubRemoteConfigManager(
                 _state.value = _state.value.copy(
                     isSyncing = false,
                     lastSyncTimestamp = now,
-                    lastSyncStatus = "Synced successfully with $sourceName"
+                    lastSyncStatus = "Synced with $sourceName ($primaryLocalUrl)"
                 )
 
-                // Dispatch heartbeat to the configured Admin Server (MAMP PRO)
+                // Dispatch heartbeat to the local MAMP PRO server
                 sendHeartbeatToMampServer()
                 true
             } catch (e: Throwable) {
@@ -147,7 +149,7 @@ class GitHubRemoteConfigManager(
         } else {
             _state.value = _state.value.copy(
                 isSyncing = false,
-                lastSyncStatus = "Failed to fetch from GitHub and MAMP server"
+                lastSyncStatus = "Cannot reach Local Server at $primaryLocalUrl. Ensure phone is on same Wi-Fi!"
             )
             false
         }

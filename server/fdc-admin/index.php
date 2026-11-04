@@ -200,25 +200,40 @@ $macIp = gethostbyname(gethostname());
             </div>
         </div>
 
-        <!-- Server & GitHub Bridge Card -->
+        <!-- 100% Local Private Server Card -->
         <div class="card">
-            <div class="card-title">SERVER & GITHUB DYNAMIC URL ARCHITECTURE</div>
+            <div class="card-title">100% LOCAL PRIVATE ARCHITECTURE (ZERO CLOUD)</div>
             <div class="grid-2">
                 <div>
-                    <p style="font-weight: 600; font-size: 14px;">Local MAMP PRO Server Endpoint:</p>
+                    <p style="font-weight: 600; font-size: 14px;">Local Mac MAMP PRO Endpoint:</p>
                     <div class="endpoint-box">http://192.168.31.105/fdc-admin</div>
                     <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
-                        Accessible by any enrolled phone on your local Wi-Fi.
+                        All device policies, app hiding, telemetry, and restrictions stay strictly on your local Mac network.
                     </p>
                 </div>
                 <div>
-                    <p style="font-weight: 600; font-size: 14px;">GitHub JSON Dynamic Pointer:</p>
-                    <div class="endpoint-box">https://raw.githubusercontent.com/.../fdc-config.json</div>
+                    <p style="font-weight: 600; font-size: 14px;">Local Live Configuration API:</p>
+                    <div class="endpoint-box">http://192.168.31.105/fdc-admin/api/config.php</div>
                     <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
-                        Phones fetch this GitHub URL to locate your MAMP server & sync permanent policies.
+                        Phones on your Wi-Fi sync directly with this local endpoint every 30 seconds.
                     </p>
                 </div>
             </div>
+        </div>
+
+        <!-- Instant Local App Hider Card -->
+        <div class="card" style="border: 1px solid rgba(175, 82, 222, 0.3);">
+            <div class="card-title" style="color: var(--purple);">INSTANT LOCAL APP HIDER (WORKS IMMEDIATELY WITHOUT CLOUD)</div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                Enter any app package name (e.g. <code>com.instagram.android</code> or <code>com.google.android.youtube</code>) to instantly vanish it from your phone's launcher or restore it.
+            </p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="target_pkg" placeholder="e.g. com.instagram.android" style="flex: 1; min-width: 260px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: monospace; background: var(--mono-bg); color: var(--text-primary);">
+                <button type="button" class="btn btn-purple" onclick="executeAdbAction('hide')">🚫 Hide / Vanish App</button>
+                <button type="button" class="btn" style="background: var(--mint);" onclick="executeAdbAction('unhide')">🟢 Unhide / Restore App</button>
+                <button type="button" class="btn" style="background: var(--orange);" onclick="executeAdbAction('set_device_owner')">👑 Elevate to Device Owner</button>
+            </div>
+            <div id="adb_result" style="display: none; margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-family: monospace; font-size: 12px; background: rgba(0,0,0,0.05);"></div>
         </div>
 
         <!-- Policy Configuration Card -->
@@ -281,13 +296,17 @@ $macIp = gethostbyname(gethostname());
                 </div>
 
                 <div style="margin-top: 18px;">
-                    <label style="font-weight: 600; font-size: 14px;">Permanently Suspended Packages (one package name per line):</label>
-                    <textarea id="suspended_packages"><?= htmlspecialchars(implode("\n", $config['suspended_packages'] ?? [])) ?></textarea>
+                    <label style="font-weight: 600; font-size: 14px; color: var(--purple);">Permanently Hidden Packages (Completely vanished from launcher, one package per line):</label>
+                    <textarea id="hidden_packages" placeholder="e.g. com.google.android.youtube&#10;com.instagram.android"><?= htmlspecialchars(implode("\n", $config['hidden_packages'] ?? [])) ?></textarea>
+                </div>
+
+                <div style="margin-top: 18px;">
+                    <label style="font-weight: 600; font-size: 14px; color: var(--orange);">Permanently Suspended Packages (Greyd-out & blocked from opening, one package per line):</label>
+                    <textarea id="suspended_packages" placeholder="e.g. com.snapchat.android&#10;com.zhiliaoapp.musically"><?= htmlspecialchars(implode("\n", $config['suspended_packages'] ?? [])) ?></textarea>
                 </div>
 
                 <div style="margin-top: 18px; display: flex; gap: 12px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-purple" onclick="copyGitHubJson()">📋 Copy JSON for GitHub</button>
-                    <button type="submit" class="btn">💾 Save & Deploy to Devices</button>
+                    <button type="submit" class="btn">💾 Save & Deploy to Devices (Local Wi-Fi)</button>
                 </div>
             </form>
         </div>
@@ -331,11 +350,33 @@ $macIp = gethostbyname(gethostname());
     </div>
 
     <script>
+        async function executeAdbAction(action) {
+            const pkg = document.getElementById('target_pkg').value.trim();
+            const resBox = document.getElementById('adb_result');
+            resBox.style.display = 'block';
+            resBox.innerText = 'Connecting to local connected phone via ADB...';
+
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('package', pkg);
+
+            try {
+                const res = await fetch('api/adb_action.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                resBox.innerText = data.output || data.message || JSON.stringify(data);
+            } catch (e) {
+                resBox.innerText = 'Error executing action: ' + e.message;
+            }
+        }
+
         document.getElementById('policyForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const suspendedText = document.getElementById('suspended_packages').value;
             const suspendedArr = suspendedText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
+            const hiddenText = document.getElementById('hidden_packages').value;
+            const hiddenArr = hiddenText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
 
             const payload = {
                 admin_server_url: "http://192.168.31.105/fdc-admin",
@@ -347,7 +388,7 @@ $macIp = gethostbyname(gethostname());
                 disallow_config_date_time: true,
                 kiosk_mode: document.getElementById('kiosk_mode').checked,
                 suspended_packages: suspendedArr,
-                hidden_packages: []
+                hidden_packages: hiddenArr
             };
 
             const res = await fetch('api/update_policy.php', {

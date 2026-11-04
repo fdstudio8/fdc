@@ -132,48 +132,51 @@ fun PermanentControllerScreen(
             }
         }
 
-        // MAMP PRO & GitHub JSON Remote Sync Card
+        // Local MAMP PRO Server Sync Card (100% Offline / Local Network)
         item {
             AppleCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.CloudSync,
+                        imageVector = Icons.Default.Dns,
                         contentDescription = null,
-                        tint = colors.purple,
+                        tint = colors.blue,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "MAMP PRO & GitHub Remote Sync",
-                        style = AppleTypography.Headline.copy(color = colors.primaryLabel)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Local MAMP PRO Server",
+                            style = AppleTypography.Headline.copy(color = colors.primaryLabel)
+                        )
+                        Text(
+                            text = "100% Offline / Local Network (No Cloud)",
+                            style = AppleTypography.Caption.copy(color = colors.secondaryLabel)
+                        )
+                    }
+                    AppleStatusBadge(
+                        status = if (remoteState.lastSyncStatus.contains("Synced", ignoreCase = true))
+                            PolicyEnforcementStatus.ENFORCED_ACTIVE
+                        else
+                            PolicyEnforcementStatus.PENDING_ELEVATION,
+                        customLabel = "v${remoteState.configVersion}"
                     )
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "MAMP PRO Admin Console URL:",
+                    text = "Mac Local Server Endpoint:",
                     style = AppleTypography.Caption.copy(color = colors.secondaryLabel)
                 )
                 Text(
                     text = remoteState.adminServerUrl,
-                    style = AppleTypography.Footnote.copy(fontFamily = FontFamily.Monospace, color = colors.primaryLabel)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "GitHub Configuration JSON Pointer:",
-                    style = AppleTypography.Caption.copy(color = colors.secondaryLabel)
-                )
-                Text(
-                    text = remoteState.githubJsonUrl.take(45) + "...",
-                    style = AppleTypography.Footnote.copy(fontFamily = FontFamily.Monospace, color = colors.secondaryLabel)
+                    style = AppleTypography.Subhead.copy(fontFamily = FontFamily.Monospace, color = colors.blue)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Sync Status: ${remoteState.lastSyncStatus}",
                     style = AppleTypography.Caption.copy(
-                        color = if (remoteState.lastSyncStatus.contains("success", ignoreCase = true)) colors.mint else colors.orange,
+                        color = if (remoteState.lastSyncStatus.contains("Synced", ignoreCase = true)) colors.mint else colors.orange,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -189,7 +192,7 @@ fun PermanentControllerScreen(
                                 remoteConfigManager.syncFromGitHub()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.purple),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.blue),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
@@ -197,19 +200,19 @@ fun PermanentControllerScreen(
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Text(if (remoteState.isSyncing) "Syncing..." else "Sync with GitHub", fontWeight = FontWeight.SemiBold)
+                        Text(if (remoteState.isSyncing) "Syncing..." else "Sync with Local Server", fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
                         onClick = {
                             onRequireAdminAuth {
-                                editUrlInput = remoteState.githubJsonUrl
+                                editUrlInput = remoteState.adminServerUrl
                                 showEditUrlDialog = true
                             }
                         },
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Edit URL", color = colors.primaryLabel)
+                        Text("Edit IP", color = colors.primaryLabel)
                     }
                 }
             }
@@ -347,21 +350,21 @@ fun PermanentControllerScreen(
         }
     }
 
-    // Edit GitHub JSON URL Dialog
+    // Edit Local Server Endpoint Dialog
     if (showEditUrlDialog) {
         AlertDialog(
             onDismissRequest = { showEditUrlDialog = false },
-            title = { Text("Configure GitHub JSON URL", style = AppleTypography.Title2) },
+            title = { Text("Configure Local Mac Server", style = AppleTypography.Title2) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Enter the raw URL of your GitHub JSON configuration file:",
+                        text = "Enter your Mac MAMP PRO Server URL on the local Wi-Fi (e.g. http://192.168.31.105/fdc-admin):",
                         style = AppleTypography.Footnote.copy(color = colors.secondaryLabel)
                     )
                     OutlinedTextField(
                         value = editUrlInput,
                         onValueChange = { editUrlInput = it },
-                        placeholder = { Text("https://raw.githubusercontent.com/.../config.json") },
+                        placeholder = { Text("http://192.168.31.105/fdc-admin") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -375,7 +378,7 @@ fun PermanentControllerScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colors.blue)
                 ) {
-                    Text("Save URL", fontWeight = FontWeight.SemiBold)
+                    Text("Save Endpoint", fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
